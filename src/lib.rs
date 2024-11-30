@@ -112,11 +112,7 @@ impl Pos<usize> {
         bounds: impl Into<Pos<usize>>,
     ) -> Option<Self> {
         let new = self + rhs;
-        if new.in_bounds(bounds) {
-            Some(Pos(new.0 as usize, new.1 as usize))
-        } else {
-            None
-        }
+        new.in_bounds(bounds)
     }
 
     pub fn add_saturating(self, rhs: impl Into<Pos<isize>>) -> Self {
@@ -133,9 +129,16 @@ impl Pos<usize> {
 }
 
 impl Pos<isize> {
-    pub fn in_bounds(self, bounds: impl Into<Pos<usize>>) -> bool {
+    /// Check if a position is within zero and the given bounds, returning the casted position if it is.
+    pub fn in_bounds(self, bounds: impl Into<Pos<usize>>) -> Option<Pos<usize>> {
         let bounds: Pos<usize> = bounds.into();
-        self.0 >= 0 && self.0 < bounds.0 as isize && self.1 >= 0 && self.1 < bounds.1 as isize
+        let in_bounds =
+            self.0 >= 0 && self.0 < bounds.0 as isize && self.1 >= 0 && self.1 < bounds.1 as isize;
+        if in_bounds {
+            Some(Pos(self.0 as usize, self.1 as usize))
+        } else {
+            None
+        }
     }
 }
 
