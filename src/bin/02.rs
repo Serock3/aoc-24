@@ -2,42 +2,36 @@ advent_of_code::solution!(2);
 use itertools::Itertools;
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let x: u32 = input
-        .lines()
-        .map(|line| {
-            let levels = line
-                .split_ascii_whitespace()
-                .map(|x| x.parse::<i32>().unwrap());
-            is_safe(levels)
-        })
-        .filter(|x| *x)
-        .count() as u32;
-    Some(x)
+    Some(
+        input
+            .lines()
+            .map(|line| {
+                let levels = line
+                    .split_ascii_whitespace()
+                    .map(|x| x.parse::<i32>().unwrap());
+                is_safe(levels)
+            })
+            .filter(|x| *x)
+            .count() as u32,
+    )
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    let x: u32 = input
-        .lines()
-        .map(|line| {
-            let levels = line
-                .split_ascii_whitespace()
-                .map(|x| x.parse::<i32>().unwrap());
-            is_safe(levels.clone())
-                || (0..levels.clone().count())
-                    .map(|i| {
-                        is_safe(levels.clone().enumerate().filter_map(|(j, n)| {
-                            if i == j {
-                                None
-                            } else {
-                                Some(n)
-                            }
-                        }))
-                    })
+pub fn part_two(input: &str) -> Option<usize> {
+    Some(
+        input
+            .lines()
+            .map(|line| {
+                let levels = line
+                    .split_ascii_whitespace()
+                    .map(|x| x.parse::<i32>().unwrap())
+                    .collect_vec();
+                (0..levels.len())
+                    .map(|i| is_safe(levels[0..i].iter().chain(levels[i + 1..].iter()).copied()))
                     .any(|b| b)
-        })
-        .filter(|x| *x)
-        .count() as u32;
-    Some(x)
+            })
+            .filter(|x| *x)
+            .count(),
+    )
 }
 
 fn is_safe(levels: impl Iterator<Item = i32>) -> bool {
