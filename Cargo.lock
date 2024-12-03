@@ -30,6 +30,7 @@ dependencies = [
  "petgraph",
  "pico-args",
  "rayon",
+ "regex",
  "rstest",
  "tinyjson",
 ]
