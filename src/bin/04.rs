@@ -1,37 +1,40 @@
 use advent_of_code::parse_char_matrix;
 use itertools::Itertools;
-use ndarray::{s, Array2, ArrayView2, Ix2, SliceArg};
+use ndarray::{s, ArrayView2};
 advent_of_code::solution!(4);
 
 pub fn part_one(input: &str) -> Option<usize> {
     let matrix = parse_char_matrix(input);
 
-    let rows: usize = matrix.rows().into_iter().map(find_xmas).sum();
-    let cols: usize = matrix.columns().into_iter().map(find_xmas).sum();
+    let rows: usize = find_xmas(matrix.rows());
+    let cols: usize = find_xmas(matrix.columns());
+
     let (n_rows, n_cols) = matrix.dim();
+    let slice_iter = (0..n_rows).map(|i| s![i.., ..]);
+    let lower_diag = find_xmas(slice_iter.map(|slice| matrix.slice(slice).into_diag()));
 
-    let lower_diag = find_diag_xmas((0..n_rows).map(|i| s![i.., ..]), &matrix);
-    let upper_diag = find_diag_xmas((1..n_cols).map(|j| s![.., j..]), &matrix);
+    let slice_iter = (1..n_cols).map(|j| s![.., j..]);
+    let upper_diag = find_xmas(slice_iter.map(|slice| matrix.slice(slice).into_diag()));
 
-    let lower_diag_mirror = find_diag_xmas((0..n_rows).map(|i| s![i.., ..;-1]), &matrix);
-    let upper_diag_mirror =
-        find_diag_xmas((1..n_cols).map(|j| s![.., ..-(j as isize);-1]), &matrix);
+    let slice_iter = (0..n_rows).map(|i| s![i.., ..;-1]);
+    let lower_diag_mirror = find_xmas(slice_iter.map(|slice| matrix.slice(slice).into_diag()));
+
+    let slice_iter = (1..n_cols).map(|j| s![.., ..-(j as isize);-1]);
+    let upper_diag_mirror = find_xmas(slice_iter.map(|slice| matrix.slice(slice).into_diag()));
 
     Some(rows + cols + lower_diag + upper_diag + lower_diag_mirror + upper_diag_mirror)
 }
 
-fn find_diag_xmas<S, I>(slice_iter: I, matrix: &Array2<char>) -> usize
+// Find the number of XMAS in an iterator of iterators of chars, e.g. rows or columns
+fn find_xmas<'a, I1, I2>(rows: I2) -> usize
 where
-    S: SliceArg<Ix2>,
-    I: Iterator<Item = S>,
+    I1: IntoIterator<Item = &'a char>,
+    I2: IntoIterator<Item = I1>,
 {
-    slice_iter
-        .map(|slice| matrix.slice(slice).into_diag())
-        .map(find_xmas)
-        .sum()
+    rows.into_iter().map(find_xmas_in_line).sum()
 }
 
-fn find_xmas<'a>(line: impl IntoIterator<Item = &'a char>) -> usize {
+fn find_xmas_in_line<'a>(line: impl IntoIterator<Item = &'a char>) -> usize {
     line.into_iter()
         .tuple_windows()
         .filter(|(&a, &b, &c, &d)| {
