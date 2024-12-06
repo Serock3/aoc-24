@@ -1,10 +1,12 @@
 use advent_of_code::{parse_char_matrix, Direction, Pos};
+use ndarray::Array2;
 
+// 2142 too low
 advent_of_code::solution!(6);
 
 pub fn part_one(input: &str) -> Option<usize> {
     let matrix = parse_char_matrix(input);
-    let pos = find_start_pos(&matrix).unwrap();
+    let pos = find_start_pos(&matrix);
     let dir = Direction::North;
 
     let mut seen = hashbrown::HashSet::new();
@@ -18,7 +20,7 @@ pub fn part_one(input: &str) -> Option<usize> {
 fn trace_path(
     mut pos: Pos<usize>,
     mut dir: Direction,
-    matrix: &ndarray::ArrayBase<ndarray::OwnedRepr<char>, ndarray::Dim<[usize; 2]>>,
+    matrix: &Array2<char>,
     mut seen: hashbrown::HashSet<Pos<usize>>,
 ) -> hashbrown::HashSet<Pos<usize>> {
     loop {
@@ -36,69 +38,70 @@ fn trace_path(
     }
 }
 
-fn is_loop(
-    mut pos: Pos<usize>,
-    mut dir: Direction,
-    matrix: &ndarray::ArrayBase<ndarray::OwnedRepr<char>, ndarray::Dim<[usize; 2]>>,
-    mut seen: hashbrown::HashSet<Pos<usize>>,
-) -> bool {
-    loop {
-        let Some(next_pos) = (pos + dir).in_bounds(matrix.dim()) else {
-            return false;
-        };
+fn find_start_pos(matrix: &Array2<char>) -> Pos<usize> {
+    let (rows, cols) = matrix.dim();
 
-        match matrix[[next_pos.0, next_pos.1]] {
-            '#' => {
-                if seen.contains(&pos) {
-                    println!("{:?} {:?}", pos, dir);
-                    return true;
-                }
-                dir = dir.turn_right()
+    for r in 0..rows {
+        for c in 0..cols {
+            if matrix[[r, c]] == '^' {
+                return Pos(r, c);
             }
-            '.' | '^' => {
-                pos = next_pos;
-                seen.insert(pos);
-            }
-            _ => unreachable!(),
         }
     }
-}
-
-fn find_start_pos(
-    matrix: &ndarray::ArrayBase<ndarray::OwnedRepr<char>, ndarray::Dim<[usize; 2]>>,
-) -> Option<Pos<usize>> {
-    matrix
-        .rows()
-        .into_iter()
-        .enumerate()
-        .map(|(i, row)| {
-            row.into_iter()
-                .enumerate()
-                .find_map(|(j, c)| (c == &'^').then_some(Pos(i, j)))
-        })
-        .find_map(|c| c)
+    unreachable!()
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let matrix = parse_char_matrix(input);
-    let pos = find_start_pos(&matrix).unwrap();
+    let mut matrix = parse_char_matrix(input);
+    let start_pos = find_start_pos(&matrix);
     let dir = Direction::North;
 
     let mut seen = hashbrown::HashSet::new();
-    seen.insert(pos);
+    seen.insert(start_pos);
 
-    let seen = trace_path(pos, dir, &matrix, seen);
+    let seen = trace_path(start_pos, dir, &matrix, seen);
+    matrix[[start_pos.0, start_pos.1]] = '^';
 
     Some(
         seen.into_iter()
             .skip(1)
-            .map(|p| {
-                let mut m = matrix.clone();
-                m[[p.0, p.1]] = '#';
-                is_loop(p, dir, &m, hashbrown::HashSet::new())
+            .filter(|box_pos| {
+                let mut matrix = matrix.clone();
+                matrix[[box_pos.0, box_pos.1]] = 'O';
+
+                is_loop(start_pos, dir, matrix)
             })
             .count(),
     )
+}
+
+fn is_loop(mut start_pos: Pos<usize>, mut dir: Direction, matrix: Array2<char>) -> bool {
+    let mut seen = hashbrown::HashSet::new();
+    loop {
+        seen.insert((start_pos, dir));
+
+        let Some(next_pos) = (start_pos + dir).in_bounds(matrix.dim()) else {
+            return false;
+        };
+
+        // match dir {
+        //     Direction::North | Direction::South => matrix[[start_pos.0, start_pos.1]] = '|',
+        //     Direction::East | Direction::West => matrix[[start_pos.0, start_pos.1]] = '-',
+        // }
+
+        match matrix[[next_pos.0, next_pos.1]] {
+            '#' | 'O' => dir = dir.turn_right(),
+            '.' | '^' | '|' | '-' => {
+                start_pos = next_pos;
+            }
+            _ => unreachable!(),
+        }
+
+        if seen.contains(&(start_pos, dir)) {
+            // print_matrix(&matrix);
+            return true;
+        }
+    }
 }
 
 #[cfg(test)]

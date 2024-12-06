@@ -2,6 +2,15 @@ pub mod template;
 
 // Use this file to add helper functions and additional modules.
 
+pub fn print_matrix(matrix: &Array2<char>) {
+    for row in matrix.outer_iter() {
+        for c in row {
+            print!("{}", c);
+        }
+        println!();
+    }
+}
+
 pub fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     assert!(!v.is_empty());
     let len = v[0].len();
