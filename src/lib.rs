@@ -68,6 +68,27 @@ pub enum Direction {
     South,
     West,
 }
+impl Direction {
+    pub fn turn_right(&self) -> Direction {
+        use Direction::*;
+        match self {
+            North => East,
+            East => South,
+            South => West,
+            West => North,
+        }
+    }
+
+    pub fn turn_left(&self) -> Direction {
+        use Direction::*;
+        match self {
+            North => West,
+            East => North,
+            South => East,
+            West => South,
+        }
+    }
+}
 use std::ops::{Add, Neg, Sub};
 
 use ndarray::{Array, Array2, Order};
@@ -77,6 +98,12 @@ pub const DIRECTIONS: [Direction; 4] = [North, East, South, West];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Pos<T>(pub T, pub T);
+
+impl<T> From<(T, T)> for Pos<T> {
+    fn from(value: (T, T)) -> Self {
+        Pos(value.0, value.1)
+    }
+}
 
 impl<T: Copy> From<[T; 2]> for Pos<T> {
     fn from(value: [T; 2]) -> Self {
