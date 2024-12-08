@@ -98,7 +98,7 @@ impl Direction {
         }
     }
 }
-use std::ops::{Add, Neg, Sub};
+use std::ops::{Add, Mul, Neg, Sub};
 
 use ndarray::{Array, Array2, Order};
 use Direction::*;
@@ -107,6 +107,17 @@ pub const DIRECTIONS: [Direction; 4] = [North, East, South, West];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Pos<T>(pub T, pub T);
+
+impl<T> Mul<T> for Pos<T>
+where
+    T: Mul<Output = T> + Copy,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        Pos(self.0 * rhs, self.1 * rhs)
+    }
+}
 
 impl<T> From<(T, T)> for Pos<T> {
     fn from(value: (T, T)) -> Self {
