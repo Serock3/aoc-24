@@ -117,20 +117,28 @@ pub fn part_two(input: &str) -> Option<usize> {
         .peekable();
 
     for (start, fragment) in backwards {
-        let mut left = segments.split_off(&start);
+        let mut right = segments.split_off(&start);
 
-        let find_map = left.iter().find_map(|(pos, seg)| match seg {
+        let find_map = segments.iter().find_map(|(pos, seg)| match seg {
             MemSegment::Fragment(_) => None,
             MemSegment::Free { size } if *size >= fragment.size => Some((*pos, *size)),
             _ => None,
         });
         if let Some((free_space_pos, free_space_size)) = find_map {
-            left.remove(&free_space_pos).unwrap();
-            left.remove(&start).unwrap();
-            // Note the fragment has the wrong position now
-            left.insert(free_space_pos, MemSegment::Fragment(fragment.clone()));
+            // Remove the fragment from the right half, replace with free space
+            right.remove(&start).unwrap();
+            right.insert(
+                start,
+                MemSegment::Free {
+                    size: fragment.size,
+                },
+            );
+
+            // Remove the free space from the left half, replace with fragment and, maybe, smaller free space
+            segments.remove(&free_space_pos).unwrap();
+            segments.insert(free_space_pos, MemSegment::Fragment(fragment.clone()));
             if free_space_size > fragment.size {
-                left.insert(
+                segments.insert(
                     free_space_pos + fragment.size,
                     MemSegment::Free {
                         size: free_space_size - fragment.size,
@@ -138,8 +146,12 @@ pub fn part_two(input: &str) -> Option<usize> {
                 );
             }
         };
-        segments.extend(left);
+        segments.extend(right);
     }
+
+    // segments.iter().for_each(|(pos, seg)| {
+    //     println!("{:?} {:?}", pos, seg);
+    // });
 
     let compacted: Vec<Option<usize>> = segments
         .iter()
