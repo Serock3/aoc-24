@@ -2,8 +2,7 @@
 /// The approach taken is similar to how `aoc-readme-stars` handles this.
 use std::{fs, io};
 
-use crate::template::timings::Timings;
-use crate::template::Day;
+use crate::template::{timings::Timings, Day};
 
 static MARKER: &str = "<!--- benchmarking table --->";
 
@@ -100,7 +99,10 @@ pub fn update(timings: Timings) -> Result<(), Error> {
 #[cfg(feature = "test_lib")]
 mod tests {
     use super::{update_content, MARKER};
-    use crate::{day, template::timings::Timing, template::timings::Timings};
+    use crate::{
+        day,
+        template::timings::{Timing, Timings},
+    };
 
     fn get_mock_timings() -> Timings {
         Timings {

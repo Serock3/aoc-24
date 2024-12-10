@@ -134,7 +134,8 @@ pub fn part_two(input: &str) -> Option<usize> {
                 },
             );
 
-            // Remove the free space from the left half, replace with fragment and, maybe, smaller free space
+            // Remove the free space from the left half, replace with fragment and, maybe, smaller
+            // free space
             segments.remove(&free_space_pos).unwrap();
             segments.insert(free_space_pos, MemSegment::Fragment(fragment.clone()));
             if free_space_size > fragment.size {

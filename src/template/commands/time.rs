@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use crate::template::run_multi::run_multi;
-use crate::template::timings::Timings;
-use crate::template::{all_days, readme_benchmarks, Day};
+use crate::template::{all_days, readme_benchmarks, run_multi::run_multi, timings::Timings, Day};
 
 pub fn handle(day: Option<Day>, run_all: bool, store: bool) {
     let stored_timings = Timings::read_from_file();

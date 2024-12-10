@@ -1,13 +1,15 @@
 /// Encapsulates code that interacts with solution functions.
 use std::fmt::Display;
-use std::hint::black_box;
-use std::io::{stdout, Write};
-use std::process::Output;
-use std::time::{Duration, Instant};
-use std::{cmp, env, process};
+use std::{
+    cmp, env,
+    hint::black_box,
+    io::{stdout, Write},
+    process,
+    process::Output,
+    time::{Duration, Instant},
+};
 
-use crate::template::ANSI_BOLD;
-use crate::template::{aoc_cli, Day, ANSI_ITALIC, ANSI_RESET};
+use crate::template::{aoc_cli, Day, ANSI_BOLD, ANSI_ITALIC, ANSI_RESET};
 
 pub fn run_part<I: Clone, T: Display>(func: impl Fn(I) -> Option<T>, input: I, day: Day, part: u8) {
     let part_str = format!("Part {part}");
@@ -22,9 +24,11 @@ pub fn run_part<I: Clone, T: Display>(func: impl Fn(I) -> Option<T>, input: I, d
     }
 }
 
-/// Run a solution part. The behavior differs depending on whether we are running a release or debug build:
+/// Run a solution part. The behavior differs depending on whether we are running a release or debug
+/// build:
 ///  1. in debug, the function is executed once.
-///  2. in release, the function is benched (approx. 1 second of execution time or 10 samples, whatever take longer.)
+///  2. in release, the function is benched (approx. 1 second of execution time or 10 samples,
+///     whatever take longer.)
 fn run_timed<I: Clone, T>(
     func: impl Fn(I) -> T,
     input: I,

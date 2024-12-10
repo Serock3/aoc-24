@@ -2,6 +2,19 @@ pub mod template;
 
 // Use this file to add helper functions and additional modules.
 
+/// Get the positions adjacent to a given position, if they are within the given bounds. Does not
+/// count diagonals.
+pub fn get_adjacent_positions(
+    pos: impl Into<Pos<usize>>,
+    bounds: impl Into<Pos<usize>>,
+) -> impl Iterator<Item = Pos<usize>> + Clone {
+    let pos = pos.into();
+    let bounds = bounds.into();
+    DIRECTIONS
+        .iter()
+        .filter_map(move |dir| (pos + *dir).in_bounds(bounds))
+}
+
 pub fn print_matrix(matrix: &Array2<char>) {
     for row in matrix.outer_iter() {
         for c in row {
@@ -176,7 +189,8 @@ impl Pos<usize> {
 }
 
 impl Pos<isize> {
-    /// Check if a position is within zero and the given bounds, returning the casted position if it is.
+    /// Check if a position is within zero and the given bounds, returning the casted position if it
+    /// is.
     pub fn in_bounds(self, bounds: impl Into<Pos<usize>>) -> Option<Pos<usize>> {
         let bounds: Pos<usize> = bounds.into();
         let in_bounds =

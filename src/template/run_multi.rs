@@ -65,7 +65,8 @@ pub fn get_path_for_bin(day: Day) -> String {
 }
 
 /// All solutions live in isolated binaries.
-/// This module encapsulates interaction with these binaries, both invoking them as well as parsing the timing output.
+/// This module encapsulates interaction with these binaries, both invoking them as well as parsing
+/// the timing output.
 pub mod child_commands {
     use super::{get_path_for_bin, Error};
     use crate::template::Day;
