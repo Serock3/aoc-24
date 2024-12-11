@@ -39,6 +39,7 @@ petgraph = "0.6.5"
 regex = "1.11.1"
 strum = "0.26.3"
 strum_macros = "0.26.4"
+cached = "0.54.0"
 
 
 [dev-dependencies]
