@@ -129,8 +129,7 @@ fn get_region_2(
                         (pos + dir.turn_right()).in_bounds(matrix.dim()),
                     ]
                 })
-                .flatten()
-                .collect_vec();
+                .flatten();
 
             let mut map = HashMap::<Pos<usize>, bool>::new();
             for e in adjacent_diagonals {
