@@ -90,6 +90,7 @@ pub enum Direction {
     South,
     West,
 }
+
 impl Direction {
     pub fn turn_right(&self) -> Direction {
         use Direction::*;
@@ -101,7 +102,7 @@ impl Direction {
         }
     }
 
-    pub fn turn_left(&self) -> Direction {
+    pub fn turn_left(self) -> Direction {
         use Direction::*;
         match self {
             North => West,
@@ -110,8 +111,21 @@ impl Direction {
             West => South,
         }
     }
+
+    pub fn opposite(&self) -> Direction {
+        use Direction::*;
+        match self {
+            North => South,
+            East => West,
+            South => North,
+            West => East,
+        }
+    }
 }
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    borrow::Borrow,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 use ndarray::{Array, Array2, Order};
 use Direction::*;
@@ -230,9 +244,9 @@ impl<T: TryInto<isize, Error: std::fmt::Debug>> Sub<Pos<T>> for Pos<usize> {
     }
 }
 
-impl From<Direction> for Pos<isize> {
-    fn from(value: Direction) -> Self {
-        match value {
+impl<D: std::borrow::Borrow<Direction>> From<D> for Pos<isize> {
+    fn from(value: D) -> Self {
+        match *value.borrow() {
             North => Pos(-1, 0),
             East => Pos(0, 1),
             South => Pos(1, 0),
