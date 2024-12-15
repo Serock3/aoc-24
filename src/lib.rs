@@ -1,4 +1,8 @@
 pub mod template;
+use std::ops::{Add, Mul, Neg, Sub};
+
+use ndarray::{Array, Array2, Order};
+use Direction::*;
 
 // Use this file to add helper functions and additional modules.
 
@@ -121,19 +125,29 @@ impl Direction {
             West => East,
         }
     }
-}
-use std::{
-    borrow::Borrow,
-    ops::{Add, Mul, Neg, Sub},
-};
 
-use ndarray::{Array, Array2, Order};
-use Direction::*;
+    pub fn from_char(c: char) -> Option<Self> {
+        use Direction::*;
+        match c {
+            '^' => Some(North),
+            '>' => Some(East),
+            'v' => Some(South),
+            '<' => Some(West),
+            _ => None,
+        }
+    }
+}
 
 pub const DIRECTIONS: [Direction; 4] = [North, East, South, West];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Pos<T>(pub T, pub T);
+
+impl std::ops::AddAssign<Direction> for Pos<isize> {
+    fn add_assign(&mut self, rhs: Direction) {
+        *self = *self + rhs;
+    }
+}
 
 impl<T> Mul<T> for Pos<T>
 where
@@ -203,6 +217,12 @@ impl Pos<usize> {
 }
 
 impl Pos<isize> {
+    pub fn tuple(self) -> (usize, usize) {
+        (self.0.try_into().unwrap(), self.1.try_into().unwrap())
+    }
+}
+
+impl Pos<isize> {
     /// Check if a position is within zero and the given bounds, returning the casted position if it
     /// is.
     pub fn in_bounds(self, bounds: impl Into<Pos<usize>>) -> Option<Pos<usize>> {
@@ -227,6 +247,16 @@ impl<T: Into<Pos<isize>>> Add<T> for Pos<usize> {
             rhs.0.wrapping_add_unsigned(self.0),
             rhs.1.wrapping_add_unsigned(self.1),
         )
+    }
+}
+
+impl Add<Direction> for Pos<isize> {
+    type Output = Pos<isize>;
+
+    /// Add a signed position to an unsigned position, saturating on overflow.
+    fn add(self, rhs: Direction) -> Self::Output {
+        let rhs: Pos<isize> = rhs.into();
+        self + rhs
     }
 }
 
