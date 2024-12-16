@@ -1,16 +1,11 @@
-use advent_of_code::{parse_char_matrix, print_matrix, Direction, Pos};
+use advent_of_code::{parse_char_matrix, Direction, Pos};
+use itertools::Itertools;
 use ndarray::{s, Array2};
 
 advent_of_code::solution!(15);
 
 pub fn part_one(input: &str) -> Option<usize> {
     let (mut matrix, dirs) = parse_input(input);
-    // println!("Initial matrix:");
-    // print_matrix(&matrix);
-    // println!();
-    // println!();
-    // println!("Directions: {:?}", dirs);
-
     let robot: Pos<isize> = matrix
         .indexed_iter()
         .find_map(|(idx, &c)| if c == '@' { Some(idx) } else { None })
@@ -58,9 +53,6 @@ fn navigate_robot(dirs: Vec<Direction>, matrix: &mut Array2<char>, mut robot: Po
             }
             _ => panic!("Invalid robot position"),
         };
-        // println!("Moving {:?}:", dir);
-        // print_matrix(&matrix);
-        // println!();
     }
 }
 
@@ -126,49 +118,101 @@ fn navigate_robot_2(dirs: Vec<Direction>, matrix: &mut Array2<char>, mut robot: 
             }
             '#' => (),
             '[' => {
-                if box_moved(matrix, robot + dir, dir) {
+                if let Some(movable_boxes) = box_moved(matrix, robot + dir, dir) {
+                    for box_pos_left in movable_boxes.into_iter().unique() {
+                        let box_pos_right = box_pos_left + Direction::East;
+                        matrix[(box_pos_right + dir).tuple()] = ']';
+                        matrix[box_pos_right.tuple()] = '.';
+                        matrix[(box_pos_left + dir).tuple()] = '[';
+                        matrix[box_pos_left.tuple()] = '.';
+                    }
                     matrix[robot.tuple()] = '.';
                     robot += dir;
                     matrix[robot.tuple()] = '@';
                 }
             }
             ']' => {
-                if box_moved(matrix, robot + dir + Direction::West, dir) {
+                if let Some(movable_boxes) = box_moved(matrix, robot + dir + Direction::West, dir) {
+                    for box_pos_left in movable_boxes.into_iter().unique() {
+                        let box_pos_right = box_pos_left + Direction::East;
+                        matrix[(box_pos_left + dir).tuple()] = '[';
+                        matrix[box_pos_left.tuple()] = '.';
+                        matrix[(box_pos_right + dir).tuple()] = ']';
+                        matrix[box_pos_right.tuple()] = '.';
+                    }
                     matrix[robot.tuple()] = '.';
                     robot += dir;
                     matrix[robot.tuple()] = '@';
                 }
             }
-
-            _ => panic!("Invalid robot position"),
+            c => unreachable!("Invalid character: {:?}", c),
         };
-        // println!("Moving {:?}:", dir);
-        // print_matrix(&matrix);
-        // println!();
     }
 }
 
-fn box_moved(matrix: &mut Array2<char>, box_left_side: Pos<isize>, dir: Direction) -> bool {
-    let box_left_side_new = box_left_side + dir;
+/// If the given box can be moved in the given direction, returns the (left side) positions of all
+/// the boxes that will be moved, otherwise returns None.
+fn box_moved(
+    matrix: &Array2<char>,
+    box_left_side: Pos<isize>,
+    dir: Direction,
+) -> Option<Vec<Pos<isize>>> {
     let box_right_side = box_left_side + Direction::East;
-    let box_right_side_new = box_right_side + dir;
 
-    // I was hoping to solve this with recursion, but now that I think about it i'm not sure if
-    // it'll work. If encountering two new boxes, the function will be called twice, and both
-    // versions would need to know if the other one encountered a wall before moving the box.
-    // Perhaps the correct solution is to not mutate the matrix directly in the function, which now
-    // that I think about it will never be allowed in Rust anyway, but instead return information
-    // about what boxes can be moved to the outermost
-    todo!()
+    match dir {
+        Direction::North | Direction::South => {
+            match (
+                matrix[(box_left_side + dir).tuple()],
+                matrix[(box_right_side + dir).tuple()],
+            ) {
+                ('.', '.') => Some(vec![box_left_side]),
+                ('#', _) => None,
+                (_, '#') => None,
+                ('[', ']') => box_moved(matrix, box_left_side + dir, dir).map(|mut v| {
+                    v.push(box_left_side);
+                    v
+                }),
+                (']', '.') => {
+                    box_moved(matrix, box_left_side + dir + Direction::West, dir).map(|mut v| {
+                        v.push(box_left_side);
+                        v
+                    })
+                }
+                ('.', '[') => box_moved(matrix, box_right_side + dir, dir).map(|mut v| {
+                    v.push(box_left_side);
+                    v
+                }),
+                (']', '[') => {
+                    let left_box = box_moved(matrix, box_left_side + dir + Direction::West, dir)?;
+                    let right_box = box_moved(matrix, box_right_side + dir, dir)?;
+                    Some([left_box, right_box, vec![box_left_side]].concat())
+                }
+                c => unreachable!("Invalid character: {:?}", c),
+            }
+        }
+        Direction::East => match matrix[(box_right_side + dir).tuple()] {
+            '.' => Some(vec![box_left_side]),
+            '#' => None,
+            '[' => box_moved(matrix, box_right_side + dir, dir).map(|mut v| {
+                v.push(box_left_side);
+                v
+            }),
+            c => unreachable!("Invalid character: {:?}", c),
+        },
+        Direction::West => match matrix[(box_left_side + dir).tuple()] {
+            '.' => Some(vec![box_left_side]),
+            '#' => None,
+            ']' => box_moved(matrix, box_left_side + dir + dir, dir).map(|mut v| {
+                v.push(box_left_side);
+                v
+            }),
+            c => unreachable!("Invalid character: {:?}", c),
+        },
+    }
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let (mut matrix, dirs) = parse_input(input);
-    // println!("Initial matrix:");
-    // print_matrix(&matrix);
-    // println!();
-    // println!();
-    // println!("Directions: {:?}", dirs);
+    let (mut matrix, dirs) = parse_input_2(input);
 
     let robot: Pos<isize> = matrix
         .indexed_iter()
@@ -188,6 +232,7 @@ pub fn part_two(input: &str) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     const SMALL_EXAMPLE: &str = "########
@@ -211,6 +256,21 @@ mod tests {
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(10092));
+    }
+
+    const SMALL_EXAMPLE_2: &str = "#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^";
+    #[test]
+    fn test_part_two_small() {
+        let result = part_two(SMALL_EXAMPLE_2);
+        assert_eq!(result, Some(2028));
     }
 
     #[test]
