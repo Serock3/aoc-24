@@ -44,7 +44,8 @@
                     "--no-run",
                     "--lib",
                     "--features=test_lib",
-                    "--package=advent_of_code"
+                    "--package=advent_of_code",
+                    " --nocapture"
                 ],
                 "filter": {
                     "name": "advent_of_code",
