@@ -2,6 +2,7 @@ use std::iter;
 
 use hashbrown::HashMap;
 use itertools::Itertools;
+use rayon::prelude::*;
 
 advent_of_code::solution!(22);
 
@@ -30,39 +31,34 @@ pub fn step(mut num: Int) -> Int {
 }
 
 pub fn part_two(input: &str) -> Option<Int> {
-    let initial_secret_numbers = input.lines().map(|line| line.parse::<Int>().unwrap());
-    let price_maps = initial_secret_numbers.map(|start_secret_num| {
-        let num_secret_numbers = 2000;
-        let secret_numbers = generate_secret_numbers(start_secret_num, num_secret_numbers + 1);
-        let diffs = secret_numbers // step 2000 times, add one since this includes the initial value
-            .tuple_windows()
-            .map(|(a, b, c, d, e)| ((b - a, c - b, d - c, e - d), e));
-        let mut diff_price_map = HashMap::new();
-        for (diffs, price) in diffs {
-            diff_price_map.entry(diffs).or_insert(price); // If we have not seen this diff-pattern
-                                                          // before, insert the price it would
-                                                          // result it
-        }
-        diff_price_map
-    });
+    let price_maps: Vec<HashMap<(i64, i64, i64, i64), i64>> = input
+        .lines()
+        .par_bridge() // rayon goes woosh
+        .map(|line| line.parse::<Int>().unwrap())
+        .map(|start_secret_num| {
+            // step 2000 times, add one since this includes the initial value
+            let num_secret_numbers = 2000;
+            let diffs = generate_secret_numbers(start_secret_num, num_secret_numbers + 1)
+                .tuple_windows()
+                .map(|(a, b, c, d, e)| ((b - a, c - b, d - c, e - d), e));
+            let mut diff_price_map = HashMap::new();
+            for (diffs, price) in diffs {
+                diff_price_map.entry(diffs).or_insert(price);
+            }
+            diff_price_map
+        })
+        .collect();
 
     let mut total_price_map = HashMap::new();
-    for map in price_maps {
+    price_maps.into_iter().for_each(|map| {
         for (diffs, price) in map {
             total_price_map
                 .entry(diffs)
                 .and_modify(|p| *p += price)
                 .or_insert(price);
         }
-    }
-    // println!("{total_price_map:?}");
-    let (diffs, price) = total_price_map
-        .into_iter()
-        .max_by_key(|(_diffs, price)| *price)
-        .unwrap();
-    println!("Optimal diff sequence: {diffs:?}");
-
-    Some(price)
+    });
+    total_price_map.values().cloned().max()
 }
 
 fn generate_secret_numbers(start: i64, amount: usize) -> impl Iterator<Item = i64> {
