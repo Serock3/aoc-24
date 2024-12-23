@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use advent_of_code::{parse_char_matrix, parse_int_matrix, Direction, Pos, DIRECTIONS};
+use advent_of_code::{parse_int_matrix, Direction, Pos, DIRECTIONS};
 use hashbrown::HashMap;
 use ndarray::Array2;
 advent_of_code::solution!(17);
@@ -103,7 +103,7 @@ fn get_heat(matrix: &Array2<usize>, next_pos: Pos<usize>) -> usize {
     *matrix.get(next_pos.tuple()).unwrap()
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(_input: &str) -> Option<u32> {
     None
 }
 

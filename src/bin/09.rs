@@ -127,6 +127,8 @@ pub fn part_two(input: &str) -> Option<usize> {
         if let Some((free_space_pos, free_space_size)) = find_map {
             // Remove the fragment from the right half, replace with free space
             right.remove(&start).unwrap();
+            // This is actually wrong, as there may be multiple consecutive free spaces, but it
+            // doesn't matter since we are not using the free spaces in the right half
             right.insert(
                 start,
                 MemSegment::Free {

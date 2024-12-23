@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use advent_of_code::{parse_char_matrix, Pos, DIRECTIONS};
 use hashbrown::{HashMap, HashSet};
-use itertools::Itertools;
 use ndarray::Array2;
 
 advent_of_code::solution!(12);

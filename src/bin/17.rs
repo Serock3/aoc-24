@@ -98,7 +98,7 @@ fn combo(op: u8, regs: &Regs) -> Reg {
     }
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(_input: &str) -> Option<u32> {
     None
 }
 
