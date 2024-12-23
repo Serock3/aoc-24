@@ -1,5 +1,8 @@
 pub mod template;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    fmt::Display,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 use ndarray::{Array, Array2, Order};
 use Direction::*;
@@ -140,8 +143,20 @@ impl Direction {
 
 pub const DIRECTIONS: [Direction; 4] = [North, East, South, West];
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Pos<T>(pub T, pub T);
+
+impl<T: Display> Display for Pos<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Pos({}, {})", self.0, self.1)
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for Pos<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Pos({:?}, {:?})", self.0, self.1)
+    }
+}
 
 impl std::ops::AddAssign<Direction> for Pos<isize> {
     fn add_assign(&mut self, rhs: Direction) {

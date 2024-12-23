@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use advent_of_code::{Pos, DIRECTIONS};
 use hashbrown::{HashMap, HashSet};
-use ndarray::Array2;
 
 advent_of_code::solution!(18);
 
@@ -12,8 +11,7 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 fn solve1(input: &str, shape: usize, bytes_fallen: usize) -> usize {
-    // let matrix = Array2::zeros((shape, shape));
-    let corrupted_bytes: HashSet<Pos<usize>> = input
+    let corrupted_bytes: Vec<Pos<usize>> = input
         .lines()
         .take(bytes_fallen)
         .map(|s| {
@@ -21,9 +19,13 @@ fn solve1(input: &str, shape: usize, bytes_fallen: usize) -> usize {
             Pos(r.parse().unwrap(), c.parse().unwrap())
         })
         .collect();
-    let end_pos = Pos(shape, shape);
-    let start_pos = Pos(0, 0);
 
+    solve_maze(shape, HashSet::from_iter(&corrupted_bytes)).unwrap()
+}
+
+fn solve_maze(shape: usize, corrupted_bytes: HashSet<&Pos<usize>>) -> Option<usize> {
+    let start_pos = Pos(0, 0);
+    let end_pos = Pos(shape, shape);
     let mut queue = VecDeque::<Pos<usize>>::new();
     queue.push_back(start_pos);
     let mut min_dist = HashMap::new();
@@ -39,7 +41,8 @@ fn solve1(input: &str, shape: usize, bytes_fallen: usize) -> usize {
             }
             let next_dist = dist + 1;
             if next_pos == end_pos {
-                return next_dist;
+                // debug_print_maze(shape, &corrupted_bytes);
+                return Some(next_dist);
             }
             if min_dist
                 .get(&next_pos)
@@ -50,11 +53,54 @@ fn solve1(input: &str, shape: usize, bytes_fallen: usize) -> usize {
             }
         }
     }
-    unreachable!()
+    None
 }
 
-pub fn part_two(input: &str) -> Option<usize> {
-    None
+#[allow(dead_code)]
+fn debug_print_maze(shape: usize, corrupted_bytes: &HashSet<&Pos<usize>>) {
+    for x in 0..=shape {
+        for y in 0..=shape {
+            if corrupted_bytes.contains(&Pos(x, y)) {
+                print!("#");
+            } else {
+                print!(".");
+            }
+        }
+        println!();
+    }
+}
+
+pub fn part_two(input: &str) -> Option<Pos<usize>> {
+    let shape = 70;
+    Some(solve2(input, shape))
+}
+
+fn solve2(input: &str, shape: usize) -> Pos<usize> {
+    let corrupted_bytes_list: Vec<Pos<usize>> = input
+        .lines()
+        .map(|s| {
+            let (r, c) = s.split_once(',').unwrap();
+            Pos(r.parse().unwrap(), c.parse().unwrap())
+        })
+        .collect();
+    let mut latest_known_solvable = 0;
+    let mut earliest_known_unsolvable = corrupted_bytes_list.len();
+    loop {
+        if earliest_known_unsolvable == latest_known_solvable + 1 {
+            return corrupted_bytes_list[latest_known_solvable];
+        }
+        let next_attempt = (latest_known_solvable + earliest_known_unsolvable) / 2;
+        if solve_maze(
+            shape,
+            HashSet::from_iter(&corrupted_bytes_list[..next_attempt]),
+        )
+        .is_some()
+        {
+            latest_known_solvable = next_attempt;
+        } else {
+            earliest_known_unsolvable = next_attempt;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -86,6 +132,7 @@ mod tests {
 0,5
 1,6
 2,0";
+
     #[test]
     fn test_part_one() {
         let result = solve1(INPUT, 6, 12);
@@ -94,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(INPUT);
-        assert_eq!(result, None);
+        let result = solve2(INPUT, 6);
+        assert_eq!(result, Pos(6, 1));
     }
 }
