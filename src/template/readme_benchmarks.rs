@@ -96,7 +96,7 @@ pub fn update(timings: Timings) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(feature = "test_lib")]
+#[cfg(all(feature = "test_lib", test))]
 mod tests {
     use super::{update_content, MARKER};
     use crate::{
@@ -147,7 +147,7 @@ mod tests {
     fn updates_empty_benchmarks() {
         let mut s = format!("foo\nbar\n{}{}\nbaz", MARKER, MARKER);
         update_content(&mut s, get_mock_timings(), 190.0).unwrap();
-        assert_eq!(s.contains("## Benchmarks"), true);
+        assert!(s.contains("## Benchmarks"));
     }
 
     #[test]

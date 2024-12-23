@@ -150,7 +150,7 @@ macro_rules! day {
 
 // --------------------------------------------------------------------------
 
-#[cfg(feature = "test_lib")]
+#[cfg(all(feature = "test_lib", test))]
 mod tests {
     use super::{all_days, Day};
 
