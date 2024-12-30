@@ -1,4 +1,7 @@
 use itertools::Itertools;
+use ndarray::array;
+use ndarray_linalg::Solve;
+use num::complex::ComplexFloat;
 
 advent_of_code::solution!(13);
 
@@ -11,16 +14,12 @@ pub fn part_one(input: &str) -> Option<u32> {
                     .split(['+', ',', '=', '\n'])
                     .skip(1)
                     .step_by(2)
-                    .map(|num| {
-                        num.parse::<u32>()
-                            .inspect_err(|_| println!("asdas: asdas: {num}"))
-                            .unwrap()
-                    });
+                    .map(|num| num.parse::<u32>().unwrap());
                 let (ax, ay, bx, by, px, py) = iter.collect_tuple().unwrap();
                 for a in 0..=100 {
                     for b in 0..=100 {
                         if ax * a + bx * b == px && ay * a + by * b == py {
-                            return a + b;
+                            return 3 * a + b;
                         }
                     }
                 }
@@ -30,8 +29,38 @@ pub fn part_one(input: &str) -> Option<u32> {
     )
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    Some(
+        input
+            .split("\n\n")
+            .map(|chunk| {
+                let iter = chunk
+                    .split(['+', ',', '=', '\n'])
+                    .skip(1)
+                    .step_by(2)
+                    .map(|num| {
+                        num.parse::<f64>()
+                            .inspect_err(|_| println!("asdas: asdas: {num}"))
+                            .unwrap()
+                    });
+                let (ax, ay, bx, by, px, py) = iter.collect_tuple().unwrap();
+                let (px, py) = (px + 10000000000000f64, py + 10000000000000f64);
+                let matrix = array![[ax, bx], [ay, by]];
+                let price_vec = array![px, py];
+                if let Ok(solution_vec) = matrix.solve_into(price_vec) {
+                    let a = solution_vec[0].round();
+                    let b = solution_vec[1].round();
+
+                    if (a - solution_vec[0]).l1_norm() < 0.05
+                        && (b - solution_vec[1]).l1_norm() < 0.05
+                    {
+                        return 3 * (a as u64) + (b as u64);
+                    }
+                }
+                0
+            })
+            .sum(),
+    )
 }
 
 #[cfg(test)]
@@ -58,11 +87,5 @@ Prize: X=18641, Y=10279";
     fn test_part_one() {
         let result = part_one(INPUT);
         assert_eq!(result, Some(480));
-    }
-
-    #[test]
-    fn test_part_two() {
-        let result = part_two(INPUT);
-        assert_eq!(result, None);
     }
 }

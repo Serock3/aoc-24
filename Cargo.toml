@@ -34,6 +34,10 @@ rayon = "1.10.0"
 hashbrown = "0.15.2"
 itertools = "0.13.0"
 ndarray = "0.16.1"
+# This crate has not had a release since 2022, so we need the main branch to match with the `ndarray` version
+ndarray-linalg = { git = "https://github.com/rust-ndarray/ndarray-linalg", features = [
+    "openblas-static",
+] }
 num = "0.4.3"
 petgraph = "0.6.5"
 regex = "1.11.1"
